@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario 5:00PM - Derivados</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            color: #00d4ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .fecha-hora {
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 8px;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .tab:hover {
+            background: rgba(0, 212, 255, 0.2);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .card h2 {
+            color: #00d4ff;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .form-row:last-child {
+            border-bottom: none;
+        }
+
+        .producto-nombre {
+            font-weight: 500;
+            color: #ddd;
+        }
+
+        input[type="number"] {
+            width: 80px;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .kg-display {
+            color: #4ade80;
+            font-weight: 600;
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .add-product {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .add-product input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+        }
+
+        .add-product input[type="number"] {
+            width: 100px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-add {
+            background: #4ade80;
+            color: #000;
+        }
+
+        .btn-add:hover {
+            background: #22c55e;
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+        }
+
+        .btn-delete:hover {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .resumen {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 153, 204, 0.1));
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .resumen-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .resumen-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+
+        .resumen-item .label {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .resumen-item .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00d4ff;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #fff;
+            padding: 15px 30px;
+            font-size: 1rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 15px 30px;
+            font-size: 1rem;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: #4ade80;
+            color: #000;
+            border-radius: 8px;
+            font-weight: 600;
+            transform: translateX(150%);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .historial-item {
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .historial-fecha {
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        .historial-total {
+            color: #4ade80;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .form-row > * {
+                justify-self: start;
+            }
+
+            .kg-display {
+                text-align: left;
+            }
+
+            input[type="number"] {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📦 Inventario 5:00PM - Derivados</h1>
+            <p class="fecha-hora" id="fechaHora"></p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="proceso">🔄 Producto en Proceso</button>
+            <button class="tab" data-tab="materia">📦 Materia Prima</button>
+            <button class="tab" data-tab="terminado">✅ Producto Terminado</button>
+            <button class="tab" data-tab="resumen">📊 Resumen</button>
+        </div>
+
+        <!-- Producto en Proceso -->
+        <div class="section active" id="proceso">
+            <div class="card">
+                <h2>Cava de Producto en Proceso</h2>
+                <div id="proceso-list"></div>
+                <div class="add-product">
+                    <input type="text" id="proceso-nuevo-nombre" placeholder="Nuevo producto...">
+                    <input type="number" id="proceso-nuevo-factor" placeholder="Kg/canasta" value="13.5">
+                    <button class="btn btn-add" onclick="agregarProducto('proceso')">+ Agregar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Materia Prima -->
+        <div class="section" id="materia">
+            <div class="card">
+                <h2>Cava Materia Prima</h2>
+                <div id="materia-list"></div>
+                <div class="add-product">
+                    <input type="text" id="materia-nuevo-nombre" placeholder="Nuevo producto...">
+                    <input type="number" id="materia-nuevo-factor" placeholder="Kg/canasta" value="17">
+                    <button class="btn btn-add" onclick="agregarProducto('materia')">+ Agregar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Producto Terminado -->
+        <div class="section" id="terminado">
+            <div class="card">
+                <h2>Cava de Producto Terminado</h2>
+                <div id="terminado-list"></div>
+                <div class="add-product">
+                    <input type="text" id="terminado-nuevo-nombre" placeholder="Nuevo producto...">
+                    <input type="number" id="terminado-nuevo-factor" placeholder="Kg/canasta" value="13">
+                    <button class="btn btn-add" onclick="agregarProducto('terminado')">+ Agregar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="section" id="resumen">
+            <div class="card resumen">
+                <h2>📊 Resumen General</h2>
+                <div class="resumen-grid">
+                    <div class="resumen-item">
+                        <div class="label">Producto en Proceso</div>
+                        <div class="value" id="total-proceso">0 kg</div>
+                    </div>
+                    <div class="resumen-item">
+                        <div class="label">Materia Prima</div>
+                        <div class="value" id="total-materia">0 kg</div>
+                    </div>
+                    <div class="resumen-item">
+                        <div class="label">Producto Terminado</div>
+                        <div class="value" id="total-terminado">0 kg</div>
+                    </div>
+                    <div class="resumen-item">
+                        <div class="label">Total General</div>
+                        <div class="value" id="total-general">0 kg</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📜 Historial de Registros</h2>
+                <div id="historial-list">
+                    <p style="color: #888; text-align: center;">No hay registros guardados</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" onclick="guardarInventario()">💾 Guardar Inventario</button>
+            <button class="btn btn-secondary" onclick="exportarExcel()">📥 Exportar a Excel</button>
+            <button class="btn btn-secondary" onclick="limpiarTodo()">🗑️ Limpiar Todo</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">✓ Guardado exitosamente</div>
+
+    <script>
+        // Datos iniciales basados en la imagen
+        let datos = {
+            proceso: [
+                { nombre: 'Punta y recorte', canastas: 87, factor: 13.5 },
+                { nombre: 'Tocineta premium', canastas: 34, factor: 13.5 },
+                { nombre: 'Tocineta seleccionada', canastas: 29, factor: 13.5 }
+            ],
+            materia: [
+                { nombre: 'Cerdo industrial', canastas: 75, factor: 17 },
+                { nombre: 'Grasa', canastas: 10, factor: 15.4 },
+                { nombre: 'Reproceso', canastas: 4, factor: 7 },
+                { nombre: 'Toppings', canastas: 1, factor: 23 },
+                { nombre: 'Pasta', canastas: 7, factor: 20 }
+            ],
+            terminado: [
+                { nombre: 'Picatta', canastas: 3, factor: 12.67 },
+                { nombre: 'Bios', canastas: 10, factor: 18 },
+                { nombre: 'Reempaque', canastas: 2, factor: 7.5 }
+            ]
+        };
+
+        let historial = JSON.parse(localStorage.getItem('inventario_historial') || '[]');
+
+        // Actualizar fecha y hora
+        function actualizarFecha() {
+            const ahora = new Date();
+            const opciones = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            document.getElementById('fechaHora').textContent = ahora.toLocaleDateString('es-ES', opciones);
+        }
+        actualizarFecha();
+        setInterval(actualizarFecha, 60000);
+
+        // Renderizar lista de productos
+        function renderizarLista(seccion) {
+            const lista = document.getElementById(`${seccion}-list`);
+            lista.innerHTML = '';
+
+            datos[seccion].forEach((producto, index) => {
+                const kg = (producto.canastas * producto.factor).toFixed(0);
+                const row = document.createElement('div');
+                row.className = 'form-row';
+                row.innerHTML = `
+                    <span class="producto-nombre">${producto.nombre}</span>
+                    <input type="number" value="${producto.canastas}" min="0" 
+                           onchange="actualizarCanastas('${seccion}', ${index}, this.value)"
+                           placeholder="Canastas">
+                    <span class="kg-display">${kg} kg</span>
+                    <button class="btn btn-delete" onclick="eliminarProducto('${seccion}', ${index})">✕</button>
+                `;
+                lista.appendChild(row);
+            });
+
+            actualizarResumen();
+        }
+
+        // Actualizar canastas
+        function actualizarCanastas(seccion, index, valor) {
+            datos[seccion][index].canastas = parseFloat(valor) || 0;
+            renderizarLista(seccion);
+        }
+
+        // Agregar producto
+        function agregarProducto(seccion) {
+            const nombre = document.getElementById(`${seccion}-nuevo-nombre`).value.trim();
+            const factor = parseFloat(document.getElementById(`${seccion}-nuevo-factor`).value) || 13;
+
+            if (nombre) {
+                datos[seccion].push({ nombre, canastas: 0, factor });
+                document.getElementById(`${seccion}-nuevo-nombre`).value = '';
+                renderizarLista(seccion);
+                mostrarToast('Producto agregado');
+            }
+        }
+
+        // Eliminar producto
+        function eliminarProducto(seccion, index) {
+            if (confirm('¿Eliminar este producto?')) {
+                datos[seccion].splice(index, 1);
+                renderizarLista(seccion);
+                mostrarToast('Producto eliminado');
+            }
+        }
+
+        // Actualizar resumen
+        function actualizarResumen() {
+            const totalProceso = datos.proceso.reduce((sum, p) => sum + (p.canastas * p.factor), 0);
+            const totalMateria = datos.materia.reduce((sum, p) => sum + (p.canastas * p.factor), 0);
+            const totalTerminado = datos.terminado.reduce((sum, p) => sum + (p.canastas * p.factor), 0);
+            const totalGeneral = totalProceso + totalMateria + totalTerminado;
+
+            document.getElementById('total-proceso').textContent = `${totalProceso.toFixed(0)} kg`;
+            document.getElementById('total-materia').textContent = `${totalMateria.toFixed(0)} kg`;
+            document.getElementById('total-terminado').textContent = `${totalTerminado.toFixed(0)} kg`;
+            document.getElementById('total-general').textContent = `${totalGeneral.toFixed(0)} kg`;
+        }
+
+        // Guardar inventario
+        function guardarInventario() {
+            const registro = {
+                fecha: new Date().toISOString(),
+                datos: JSON.parse(JSON.stringify(datos)),
+                totales: {
+                    proceso: datos.proceso.reduce((sum, p) => sum + (p.canastas * p.factor), 0),
+                    materia: datos.materia.reduce((sum, p) => sum + (p.canastas * p.factor), 0),
+                    terminado: datos.terminado.reduce((sum, p) => sum + (p.canastas * p.factor), 0)
+                }
+            };
+
+            historial.unshift(registro);
+            if (historial.length > 30) historial.pop();
+            localStorage.setItem('inventario_historial', JSON.stringify(historial));
+            
+            renderizarHistorial();
+            mostrarToast('Inventario guardado');
+        }
+
+        // Renderizar historial
+        function renderizarHistorial() {
+            const lista = document.getElementById('historial-list');
+            
+            if (historial.length === 0) {
+                lista.innerHTML = '<p style="color: #888; text-align: center;">No hay registros guardados</p>';
+                return;
+            }
+
+            lista.innerHTML = historial.slice(0, 10).map(reg => {
+                const fecha = new Date(reg.fecha);
+                const total = reg.totales.proceso + reg.totales.materia + reg.totales.terminado;
+                return `
+                    <div class="historial-item">
+                        <span class="historial-fecha">${fecha.toLocaleDateString('es-ES')} ${fecha.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}</span>
+                        <span class="historial-total">${total.toFixed(0)} kg total</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Exportar a Excel (CSV)
+        function exportarExcel() {
+            let csv = 'INVENTARIO 5:00PM DERIVADOS\n';
+            csv += `Fecha:,${new Date().toLocaleDateString('es-ES')}\n\n`;
+
+            csv += 'CAVA DE PRODUCTO EN PROCESO\n';
+            csv += 'Producto,Canastas,Kg Aproximados\n';
+            datos.proceso.forEach(p => {
+                csv += `${p.nombre},${p.canastas},${(p.canastas * p.factor).toFixed(0)}\n`;
+            });
+
+            csv += '\nCAVA MATERIA PRIMA\n';
+            csv += 'Producto,Canastas,Kg Aproximados\n';
+            datos.materia.forEach(p => {
+                csv += `${p.nombre},${p.canastas},${(p.canastas * p.factor).toFixed(0)}\n`;
+            });
+
+            csv += '\nCAVA DE PRODUCTO TERMINADO\n';
+            csv += 'Producto,Canastas,Kg Aproximados\n';
+            datos.terminado.forEach(p => {
+                csv += `${p.nombre},${p.canastas},${(p.canastas * p.factor).toFixed(0)}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `inventario_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+
+            mostrarToast('Archivo exportado');
+        }
+
+        // Limpiar todo
+        function limpiarTodo() {
+            if (confirm('¿Limpiar todos los datos actuales?')) {
+                Object.keys(datos).forEach(seccion => {
+                    datos[seccion].forEach(p => p.canastas = 0);
+                });
+                ['proceso', 'materia', 'terminado'].forEach(renderizarLista);
+                mostrarToast('Datos limpiados');
+            }
+        }
+
+        // Mostrar toast
+        function mostrarToast(mensaje) {
+            const toast = document.getElementById('toast');
+            toast.textContent = '✓ ' + mensaje;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // Tabs
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Inicializar
+        ['proceso', 'materia', 'terminado'].forEach(renderizarLista);
+        renderizarHistorial();
+    </script>
+</body>
+</html>
