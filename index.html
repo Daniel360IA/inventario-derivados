@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario 5:00PM - Derivados</title>
+    <title>Sistema de Inventarios 5:00PM</title>
     <style>
         * {
             box-sizing: border-box;
@@ -20,7 +20,7 @@
         }
 
         .container {
-            max-width: 900px;
+            max-width: 950px;
             margin: 0 auto;
         }
 
@@ -42,6 +42,56 @@
             font-size: 0.95rem;
         }
 
+        /* Módulos principales */
+        .modulos {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            justify-content: center;
+        }
+
+        .modulo-btn {
+            padding: 15px 35px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .modulo-btn:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.5);
+        }
+
+        .modulo-btn.active {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            border-color: #00d4ff;
+            color: #fff;
+        }
+
+        .modulo-btn.crudos.active {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-color: #f59e0b;
+        }
+
+        .modulo-btn.apanados.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-color: #10b981;
+        }
+
+        .modulo-content {
+            display: none;
+        }
+
+        .modulo-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
         .tabs {
             display: flex;
             gap: 8px;
@@ -59,7 +109,7 @@
             transition: all 0.3s;
             font-size: 0.9rem;
             flex: 1;
-            min-width: 150px;
+            min-width: 140px;
         }
 
         .tab:hover {
@@ -70,6 +120,24 @@
             background: linear-gradient(135deg, #00d4ff, #0099cc);
             color: #fff;
             font-weight: 600;
+        }
+
+        /* Tabs naranjas para Crudos */
+        .crudos-tabs .tab.active {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .crudos-tabs .tab:hover {
+            background: rgba(245, 158, 11, 0.2);
+        }
+
+        /* Tabs verdes para Apanados */
+        .apanados-tabs .tab.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .apanados-tabs .tab:hover {
+            background: rgba(16, 185, 129, 0.2);
         }
 
         .section {
@@ -102,13 +170,25 @@
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
+        .card.crudos-card h2 {
+            color: #f59e0b;
+        }
+
+        .card.apanados-card h2 {
+            color: #10b981;
+        }
+
         .form-row {
             display: grid;
-            grid-template-columns: 1fr auto auto auto;
+            grid-template-columns: 1fr auto auto auto auto;
             gap: 10px;
             align-items: center;
             padding: 10px 0;
             border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .form-row.no-carros {
+            grid-template-columns: 1fr auto auto auto;
         }
 
         .form-row:last-child {
@@ -121,7 +201,7 @@
         }
 
         input[type="number"] {
-            width: 80px;
+            width: 70px;
             padding: 10px;
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 6px;
@@ -137,10 +217,23 @@
             box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
         }
 
+        .input-label {
+            font-size: 0.75rem;
+            color: #888;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
         .kg-display {
             color: #4ade80;
             font-weight: 600;
-            min-width: 100px;
+            min-width: 90px;
             text-align: right;
         }
 
@@ -150,10 +243,12 @@
             margin-top: 15px;
             padding-top: 15px;
             border-top: 1px solid rgba(255,255,255,0.1);
+            flex-wrap: wrap;
         }
 
         .add-product input[type="text"] {
             flex: 1;
+            min-width: 150px;
             padding: 10px;
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 6px;
@@ -162,7 +257,7 @@
         }
 
         .add-product input[type="number"] {
-            width: 100px;
+            width: 90px;
         }
 
         .btn {
@@ -200,9 +295,19 @@
             border: 1px solid rgba(0, 212, 255, 0.3);
         }
 
+        .resumen.crudos-resumen {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .resumen.apanados-resumen {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
         .resumen-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 15px;
         }
 
@@ -225,6 +330,14 @@
             color: #00d4ff;
         }
 
+        .resumen.crudos-resumen .resumen-item .value {
+            color: #f59e0b;
+        }
+
+        .resumen.apanados-resumen .resumen-item .value {
+            color: #10b981;
+        }
+
         .actions {
             display: flex;
             gap: 10px;
@@ -243,6 +356,22 @@
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-primary.crudos-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .btn-primary.crudos-btn:hover {
+            box-shadow: 0 5px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-primary.apanados-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .btn-primary.apanados-btn:hover {
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
         }
 
         .btn-secondary {
@@ -293,6 +422,23 @@
             color: #4ade80;
         }
 
+        .modulo-badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+
+        .badge-derivados {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+        }
+
+        .badge-crudos {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
         @media (max-width: 600px) {
             .form-row {
                 grid-template-columns: 1fr;
@@ -310,128 +456,324 @@
             input[type="number"] {
                 width: 100%;
             }
+
+            .modulo-btn {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>📦 Inventario 5:00PM - Derivados</h1>
+            <h1>📦 Sistema de Inventarios 5:00PM</h1>
             <p class="fecha-hora" id="fechaHora"></p>
         </header>
 
-        <div class="tabs">
-            <button class="tab active" data-tab="proceso">🔄 Producto en Proceso</button>
-            <button class="tab" data-tab="materia">📦 Materia Prima</button>
-            <button class="tab" data-tab="terminado">✅ Producto Terminado</button>
-            <button class="tab" data-tab="resumen">📊 Resumen</button>
+        <!-- Selector de Módulos -->
+        <div class="modulos">
+            <button class="modulo-btn active" data-modulo="derivados">🥓 DERIVADOS</button>
+            <button class="modulo-btn crudos" data-modulo="crudos">🍖 CRUDOS</button>
+            <button class="modulo-btn apanados" data-modulo="apanados">🍗 APANADOS</button>
         </div>
 
-        <!-- Producto en Proceso -->
-        <div class="section active" id="proceso">
-            <div class="card">
-                <h2>Cava de Producto en Proceso</h2>
-                <div id="proceso-list"></div>
-                <div class="add-product">
-                    <input type="text" id="proceso-nuevo-nombre" placeholder="Nuevo producto...">
-                    <input type="number" id="proceso-nuevo-factor" placeholder="Kg/canasta" value="13.5">
-                    <button class="btn btn-add" onclick="agregarProducto('proceso')">+ Agregar</button>
-                </div>
+        <!-- ==================== MÓDULO DERIVADOS ==================== -->
+        <div class="modulo-content active" id="modulo-derivados">
+            <div class="tabs">
+                <button class="tab active" data-tab="proceso">🔄 Producto en Proceso</button>
+                <button class="tab" data-tab="materia">📦 Materia Prima</button>
+                <button class="tab" data-tab="terminado">✅ Producto Terminado</button>
+                <button class="tab" data-tab="resumen-derivados">📊 Resumen</button>
             </div>
-        </div>
 
-        <!-- Materia Prima -->
-        <div class="section" id="materia">
-            <div class="card">
-                <h2>Cava Materia Prima</h2>
-                <div id="materia-list"></div>
-                <div class="add-product">
-                    <input type="text" id="materia-nuevo-nombre" placeholder="Nuevo producto...">
-                    <input type="number" id="materia-nuevo-factor" placeholder="Kg/canasta" value="17">
-                    <button class="btn btn-add" onclick="agregarProducto('materia')">+ Agregar</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Producto Terminado -->
-        <div class="section" id="terminado">
-            <div class="card">
-                <h2>Cava de Producto Terminado</h2>
-                <div id="terminado-list"></div>
-                <div class="add-product">
-                    <input type="text" id="terminado-nuevo-nombre" placeholder="Nuevo producto...">
-                    <input type="number" id="terminado-nuevo-factor" placeholder="Kg/canasta" value="13">
-                    <button class="btn btn-add" onclick="agregarProducto('terminado')">+ Agregar</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Resumen -->
-        <div class="section" id="resumen">
-            <div class="card resumen">
-                <h2>📊 Resumen General</h2>
-                <div class="resumen-grid">
-                    <div class="resumen-item">
-                        <div class="label">Producto en Proceso</div>
-                        <div class="value" id="total-proceso">0 kg</div>
-                    </div>
-                    <div class="resumen-item">
-                        <div class="label">Materia Prima</div>
-                        <div class="value" id="total-materia">0 kg</div>
-                    </div>
-                    <div class="resumen-item">
-                        <div class="label">Producto Terminado</div>
-                        <div class="value" id="total-terminado">0 kg</div>
-                    </div>
-                    <div class="resumen-item">
-                        <div class="label">Total General</div>
-                        <div class="value" id="total-general">0 kg</div>
+            <div class="section active" id="proceso">
+                <div class="card">
+                    <h2>Cava de Producto en Proceso</h2>
+                    <div id="proceso-list"></div>
+                    <div class="add-product">
+                        <input type="text" id="proceso-nuevo-nombre" placeholder="Nuevo producto...">
+                        <input type="number" id="proceso-nuevo-factor" placeholder="Kg/canasta" value="13.5">
+                        <button class="btn btn-add" onclick="agregarProducto('proceso')">+ Agregar</button>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <h2>📜 Historial de Registros</h2>
-                <div id="historial-list">
-                    <p style="color: #888; text-align: center;">No hay registros guardados</p>
+            <div class="section" id="materia">
+                <div class="card">
+                    <h2>Cava Materia Prima</h2>
+                    <div id="materia-list"></div>
+                    <div class="add-product">
+                        <input type="text" id="materia-nuevo-nombre" placeholder="Nuevo producto...">
+                        <input type="number" id="materia-nuevo-factor" placeholder="Kg/canasta" value="17">
+                        <button class="btn btn-add" onclick="agregarProducto('materia')">+ Agregar</button>
+                    </div>
                 </div>
+            </div>
+
+            <div class="section" id="terminado">
+                <div class="card">
+                    <h2>Cava de Producto Terminado</h2>
+                    <div id="terminado-list"></div>
+                    <div class="add-product">
+                        <input type="text" id="terminado-nuevo-nombre" placeholder="Nuevo producto...">
+                        <input type="number" id="terminado-nuevo-factor" placeholder="Kg/canasta" value="13">
+                        <button class="btn btn-add" onclick="agregarProducto('terminado')">+ Agregar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" id="resumen-derivados">
+                <div class="card resumen">
+                    <h2>📊 Resumen Derivados</h2>
+                    <div class="resumen-grid">
+                        <div class="resumen-item">
+                            <div class="label">Producto en Proceso</div>
+                            <div class="value" id="total-proceso">0 kg</div>
+                        </div>
+                        <div class="resumen-item">
+                            <div class="label">Materia Prima</div>
+                            <div class="value" id="total-materia">0 kg</div>
+                        </div>
+                        <div class="resumen-item">
+                            <div class="label">Producto Terminado</div>
+                            <div class="value" id="total-terminado">0 kg</div>
+                        </div>
+                        <div class="resumen-item">
+                            <div class="label">Total Derivados</div>
+                            <div class="value" id="total-derivados">0 kg</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary" onclick="guardarInventario('derivados')">💾 Guardar Derivados</button>
+                <button class="btn btn-secondary" onclick="exportarExcel('derivados')">📥 Exportar Excel</button>
+                <button class="btn btn-secondary" onclick="limpiarModulo('derivados')">🗑️ Limpiar</button>
             </div>
         </div>
 
-        <div class="actions">
-            <button class="btn btn-primary" onclick="guardarInventario()">💾 Guardar Inventario</button>
-            <button class="btn btn-secondary" onclick="exportarExcel()">📥 Exportar a Excel</button>
-            <button class="btn btn-secondary" onclick="limpiarTodo()">🗑️ Limpiar Todo</button>
+        <!-- ==================== MÓDULO CRUDOS ==================== -->
+        <div class="modulo-content" id="modulo-crudos">
+            <div class="tabs crudos-tabs">
+                <button class="tab active" data-tab="cava-mp">📦 Cava Materia Prima N°2 Y 3</button>
+                <button class="tab" data-tab="tunel">🧊 Túnel</button>
+                <button class="tab" data-tab="resumen-crudos">📊 Resumen</button>
+            </div>
+
+            <div class="section active" id="cava-mp">
+                <div class="card crudos-card">
+                    <h2>Cava Materia Prima N° 2 Y 3</h2>
+                    <div id="cava-mp-list"></div>
+                    <div class="add-product">
+                        <input type="text" id="cava-mp-nuevo-nombre" placeholder="Nuevo producto...">
+                        <input type="number" id="cava-mp-nuevo-factor" placeholder="Kg/canasta" value="18">
+                        <button class="btn btn-add" onclick="agregarProducto('cava-mp')">+ Agregar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" id="tunel">
+                <div class="card crudos-card">
+                    <h2>Túnel</h2>
+                    <div id="tunel-list"></div>
+                    <div class="add-product">
+                        <input type="text" id="tunel-nuevo-nombre" placeholder="Nuevo producto...">
+                        <input type="number" id="tunel-nuevo-factor" placeholder="Kg/canasta" value="20">
+                        <button class="btn btn-add" onclick="agregarProducto('tunel')">+ Agregar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" id="resumen-crudos">
+                <div class="card resumen crudos-resumen">
+                    <h2>📊 Resumen Crudos</h2>
+                    <div class="resumen-grid">
+                        <div class="resumen-item">
+                            <div class="label">Cava MP N°2 Y 3</div>
+                            <div class="value" id="total-cava-mp">0 kg</div>
+                        </div>
+                        <div class="resumen-item">
+                            <div class="label">Túnel</div>
+                            <div class="value" id="total-tunel">0 kg</div>
+                        </div>
+                        <div class="resumen-item">
+                            <div class="label">Total Crudos</div>
+                            <div class="value" id="total-crudos">0 kg</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary crudos-btn" onclick="guardarInventario('crudos')">💾 Guardar Crudos</button>
+                <button class="btn btn-secondary" onclick="exportarExcel('crudos')">📥 Exportar Excel</button>
+                <button class="btn btn-secondary" onclick="limpiarModulo('crudos')">🗑️ Limpiar</button>
+            </div>
+        </div>
+
+        <!-- ==================== MÓDULO APANADOS ==================== -->
+        <div class="modulo-content" id="modulo-apanados">
+            <div class="tabs apanados-tabs">
+                <button class="tab active" data-tab="ap-cava-mp">📦 Cava Materia Prima</button>
+                <button class="tab" data-tab="ap-ventiladores">🌀 Ventiladores</button>
+                <button class="tab" data-tab="ap-pasillo">🚶 Pasillo</button>
+                <button class="tab" data-tab="ap-terminado">✅ Producto Terminado</button>
+                <button class="tab" data-tab="resumen-apanados">📊 Resumen</button>
+            </div>
+
+            <div class="section active" id="ap-cava-mp">
+                <div class="card apanados-card">
+                    <h2>Cava Materia Prima - Apanados</h2>
+                    <div id="ap-cava-mp-list"></div>
+                    <div class="add-product">
+                        <input type="text" id="ap-cava-mp-nuevo-nombre" placeholder="Nuevo producto...">
+                        <input type="number" id="ap-cava-mp-nuevo-factor" placeholder="Kg/canasta" value="16">
+                        <button class="btn btn-add" onclick="agregarProducto('ap-cava-mp')">+ Agregar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" id="ap-ventiladores">
+                <div class="card apanados-card">
+                    <h2>Ventiladores</h2>
+                    <div id="ap-ventiladores-list"></div>
+                    <div class="add-product">
+                        <input type="text" id="ap-ventiladores-nuevo-nombre" placeholder="Nuevo producto...">
+                        <input type="number" id="ap-ventiladores-nuevo-factor" placeholder="Kg/canasta" value="18">
+                        <button class="btn btn-add" onclick="agregarProducto('ap-ventiladores')">+ Agregar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" id="ap-pasillo">
+                <div class="card apanados-card">
+                    <h2>Pasillo</h2>
+                    <div id="ap-pasillo-list"></div>
+                    <div class="add-product">
+                        <input type="text" id="ap-pasillo-nuevo-nombre" placeholder="Nuevo producto...">
+                        <input type="number" id="ap-pasillo-nuevo-factor" placeholder="Kg/canasta" value="18">
+                        <button class="btn btn-add" onclick="agregarProducto('ap-pasillo')">+ Agregar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" id="ap-terminado">
+                <div class="card apanados-card">
+                    <h2>Cava Producto Terminado - Apanados</h2>
+                    <div id="ap-terminado-list"></div>
+                    <div class="add-product">
+                        <input type="text" id="ap-terminado-nuevo-nombre" placeholder="Nuevo producto...">
+                        <input type="number" id="ap-terminado-nuevo-factor" placeholder="Kg/canasta" value="15">
+                        <button class="btn btn-add" onclick="agregarProducto('ap-terminado')">+ Agregar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" id="resumen-apanados">
+                <div class="card resumen apanados-resumen">
+                    <h2>📊 Resumen Apanados</h2>
+                    <div class="resumen-grid">
+                        <div class="resumen-item">
+                            <div class="label">Cava Materia Prima</div>
+                            <div class="value" id="total-ap-cava-mp">0 kg</div>
+                        </div>
+                        <div class="resumen-item">
+                            <div class="label">Ventiladores</div>
+                            <div class="value" id="total-ap-ventiladores">0 kg</div>
+                        </div>
+                        <div class="resumen-item">
+                            <div class="label">Pasillo</div>
+                            <div class="value" id="total-ap-pasillo">0 kg</div>
+                        </div>
+                        <div class="resumen-item">
+                            <div class="label">Producto Terminado</div>
+                            <div class="value" id="total-ap-terminado">0 kg</div>
+                        </div>
+                        <div class="resumen-item">
+                            <div class="label">Total Apanados</div>
+                            <div class="value" id="total-apanados">0 kg</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary apanados-btn" onclick="guardarInventario('apanados')">💾 Guardar Apanados</button>
+                <button class="btn btn-secondary" onclick="exportarExcel('apanados')">📥 Exportar Excel</button>
+                <button class="btn btn-secondary" onclick="limpiarModulo('apanados')">🗑️ Limpiar</button>
+            </div>
         </div>
     </div>
 
     <div class="toast" id="toast">✓ Guardado exitosamente</div>
 
     <script>
-        // Datos iniciales basados en la imagen
+        // ==================== DATOS ====================
         let datos = {
+            // Derivados
             proceso: [
-                { nombre: 'Punta y recorte', canastas: 87, factor: 13.5 },
-                { nombre: 'Tocineta premium', canastas: 34, factor: 13.5 },
-                { nombre: 'Tocineta seleccionada', canastas: 29, factor: 13.5 }
+                { nombre: 'Punta y recorte', canastas: 0, factor: 13.5 },
+                { nombre: 'Tocineta premium', canastas: 0, factor: 13.5 },
+                { nombre: 'Tocineta seleccionada', canastas: 0, factor: 13.5 }
             ],
             materia: [
-                { nombre: 'Cerdo industrial', canastas: 75, factor: 17 },
-                { nombre: 'Grasa', canastas: 10, factor: 15.4 },
-                { nombre: 'Reproceso', canastas: 4, factor: 7 },
-                { nombre: 'Toppings', canastas: 1, factor: 23 },
-                { nombre: 'Pasta', canastas: 7, factor: 20 }
+                { nombre: 'Cerdo industrial', canastas: 0, factor: 17 },
+                { nombre: 'Grasa', canastas: 0, factor: 15.4 },
+                { nombre: 'Reproceso', canastas: 0, factor: 7 },
+                { nombre: 'Toppings', canastas: 0, factor: 23 },
+                { nombre: 'Pasta', canastas: 0, factor: 20 }
             ],
             terminado: [
-                { nombre: 'Picatta', canastas: 3, factor: 12.67 },
-                { nombre: 'Bios', canastas: 10, factor: 18 },
-                { nombre: 'Reempaque', canastas: 2, factor: 7.5 }
+                { nombre: 'Picatta', canastas: 0, factor: 12.67 },
+                { nombre: 'Bios', canastas: 0, factor: 18 },
+                { nombre: 'Reempaque', canastas: 0, factor: 7.5 }
+            ],
+            // Crudos
+            'cava-mp': [
+                { nombre: 'ML USA INY', canastas: 0, factor: 18 },
+                { nombre: 'Filete Chuleton', canastas: 0, factor: 17 },
+                { nombre: 'Carcasa', canastas: 0, factor: 17 },
+                { nombre: 'Pechuga Bucanero', canastas: 0, factor: 18.14 }
+            ],
+            tunel: [
+                { nombre: 'FUP 100', carros: 0, canastas: 0, factor: 75, tipoCalculo: 'carros' },
+                { nombre: 'Recorte', carros: 0, canastas: 0, factor: 20, tipoCalculo: 'canastas' },
+                { nombre: 'CP 200 X10', carros: 0, canastas: 0, factor: 15.6, tipoCalculo: 'canastas' },
+                { nombre: 'Pasta tipo A', carros: 0, canastas: 0, factor: 20, tipoCalculo: 'canastas' },
+                { nombre: 'FN 100 X20', carros: 0, canastas: 0, factor: 12.5, tipoCalculo: 'canastas' },
+                { nombre: 'FADOBADO', carros: 0, canastas: 0, factor: 16.25, tipoCalculo: 'canastas' },
+                { nombre: 'Alas BIOS', carros: 0, canastas: 0, factor: 12, tipoCalculo: 'canastas' },
+                { nombre: 'FN 100 COA', carros: 0, canastas: 0, factor: 9.67, tipoCalculo: 'canastas' }
+            ],
+            // Apanados
+            'ap-cava-mp': [
+                { nombre: 'Mezcla de hamburguesa', canastas: 0, factor: 14.29 },
+                { nombre: 'Filete friko', canastas: 0, factor: 22.22 },
+                { nombre: 'Carcasa', canastas: 0, factor: 16 }
+            ],
+            'ap-ventiladores': [
+                { nombre: 'Pechuga', canastas: 0, factor: 18 }
+            ],
+            'ap-pasillo': [
+                { nombre: 'Pechuga', canastas: 0, factor: 20 },
+                { nombre: 'Lomos bucanero', canastas: 0, factor: 15 }
+            ],
+            'ap-terminado': [
+                { nombre: 'Sarku', canastas: 0, factor: 15.26 },
+                { nombre: 'Chicken 330', canastas: 0, factor: 10.68 },
+                { nombre: 'Chicken 1000', canastas: 0, factor: 12.44 },
+                { nombre: 'Filete 100 X empacar', canastas: 0, factor: 11.67 },
+                { nombre: 'Palos X empacar', canastas: 0, factor: 4.62 },
+                { nombre: 'Reproceso', canastas: 0, factor: 8.35 },
+                { nombre: 'Promoción', canastas: 0, factor: 8 }
             ]
         };
 
-        let historial = JSON.parse(localStorage.getItem('inventario_historial') || '[]');
+        let historial = JSON.parse(localStorage.getItem('inventario_historial_v2') || '[]');
 
-        // Actualizar fecha y hora
+        // ==================== FECHA/HORA ====================
         function actualizarFecha() {
             const ahora = new Date();
             const opciones = { 
@@ -447,49 +789,95 @@
         actualizarFecha();
         setInterval(actualizarFecha, 60000);
 
-        // Renderizar lista de productos
+        // ==================== RENDERIZAR LISTAS ====================
         function renderizarLista(seccion) {
             const lista = document.getElementById(`${seccion}-list`);
+            if (!lista) return;
             lista.innerHTML = '';
 
             datos[seccion].forEach((producto, index) => {
-                const kg = (producto.canastas * producto.factor).toFixed(0);
                 const row = document.createElement('div');
-                row.className = 'form-row';
-                row.innerHTML = `
-                    <span class="producto-nombre">${producto.nombre}</span>
-                    <input type="number" value="${producto.canastas}" min="0" 
-                           onchange="actualizarCanastas('${seccion}', ${index}, this.value)"
-                           placeholder="Canastas">
-                    <span class="kg-display">${kg} kg</span>
-                    <button class="btn btn-delete" onclick="eliminarProducto('${seccion}', ${index})">✕</button>
-                `;
+                
+                // Túnel tiene carros y canastas
+                if (seccion === 'tunel') {
+                    const kg = producto.tipoCalculo === 'carros' 
+                        ? (producto.carros * producto.factor)
+                        : (producto.canastas * producto.factor);
+                    
+                    row.className = 'form-row';
+                    row.innerHTML = `
+                        <span class="producto-nombre">${producto.nombre}</span>
+                        <div class="input-group">
+                            <input type="number" value="${producto.carros}" min="0" 
+                                   onchange="actualizarTunel(${index}, 'carros', this.value)"
+                                   placeholder="0">
+                            <span class="input-label">Carros</span>
+                        </div>
+                        <div class="input-group">
+                            <input type="number" value="${producto.canastas}" min="0" 
+                                   onchange="actualizarTunel(${index}, 'canastas', this.value)"
+                                   placeholder="0">
+                            <span class="input-label">Canastas</span>
+                        </div>
+                        <span class="kg-display">${kg.toFixed(0)} kg</span>
+                        <button class="btn btn-delete" onclick="eliminarProducto('${seccion}', ${index})">✕</button>
+                    `;
+                } else {
+                    // Otras secciones solo tienen canastas
+                    const kg = (producto.canastas * producto.factor).toFixed(0);
+                    row.className = 'form-row no-carros';
+                    row.innerHTML = `
+                        <span class="producto-nombre">${producto.nombre}</span>
+                        <div class="input-group">
+                            <input type="number" value="${producto.canastas}" min="0" 
+                                   onchange="actualizarCanastas('${seccion}', ${index}, this.value)"
+                                   placeholder="0">
+                            <span class="input-label">Canastas</span>
+                        </div>
+                        <span class="kg-display">${kg} kg</span>
+                        <button class="btn btn-delete" onclick="eliminarProducto('${seccion}', ${index})">✕</button>
+                    `;
+                }
                 lista.appendChild(row);
             });
 
             actualizarResumen();
         }
 
-        // Actualizar canastas
+        // ==================== ACTUALIZAR VALORES ====================
         function actualizarCanastas(seccion, index, valor) {
             datos[seccion][index].canastas = parseFloat(valor) || 0;
             renderizarLista(seccion);
         }
 
-        // Agregar producto
+        function actualizarTunel(index, campo, valor) {
+            datos.tunel[index][campo] = parseFloat(valor) || 0;
+            // Actualizar tipo de cálculo basado en qué campo tiene valor
+            if (campo === 'carros' && parseFloat(valor) > 0) {
+                datos.tunel[index].tipoCalculo = 'carros';
+            } else if (campo === 'canastas' && parseFloat(valor) > 0) {
+                datos.tunel[index].tipoCalculo = 'canastas';
+            }
+            renderizarLista('tunel');
+        }
+
+        // ==================== AGREGAR/ELIMINAR PRODUCTOS ====================
         function agregarProducto(seccion) {
             const nombre = document.getElementById(`${seccion}-nuevo-nombre`).value.trim();
-            const factor = parseFloat(document.getElementById(`${seccion}-nuevo-factor`).value) || 13;
+            const factor = parseFloat(document.getElementById(`${seccion}-nuevo-factor`).value) || 15;
 
             if (nombre) {
-                datos[seccion].push({ nombre, canastas: 0, factor });
+                if (seccion === 'tunel') {
+                    datos[seccion].push({ nombre, carros: 0, canastas: 0, factor, tipoCalculo: 'canastas' });
+                } else {
+                    datos[seccion].push({ nombre, canastas: 0, factor });
+                }
                 document.getElementById(`${seccion}-nuevo-nombre`).value = '';
                 renderizarLista(seccion);
                 mostrarToast('Producto agregado');
             }
         }
 
-        // Eliminar producto
         function eliminarProducto(seccion, index) {
             if (confirm('¿Eliminar este producto?')) {
                 datos[seccion].splice(index, 1);
@@ -498,104 +886,183 @@
             }
         }
 
-        // Actualizar resumen
+        // ==================== RESUMEN ====================
         function actualizarResumen() {
+            // Derivados
             const totalProceso = datos.proceso.reduce((sum, p) => sum + (p.canastas * p.factor), 0);
             const totalMateria = datos.materia.reduce((sum, p) => sum + (p.canastas * p.factor), 0);
             const totalTerminado = datos.terminado.reduce((sum, p) => sum + (p.canastas * p.factor), 0);
-            const totalGeneral = totalProceso + totalMateria + totalTerminado;
+            const totalDerivados = totalProceso + totalMateria + totalTerminado;
 
             document.getElementById('total-proceso').textContent = `${totalProceso.toFixed(0)} kg`;
             document.getElementById('total-materia').textContent = `${totalMateria.toFixed(0)} kg`;
             document.getElementById('total-terminado').textContent = `${totalTerminado.toFixed(0)} kg`;
-            document.getElementById('total-general').textContent = `${totalGeneral.toFixed(0)} kg`;
+            document.getElementById('total-derivados').textContent = `${totalDerivados.toFixed(0)} kg`;
+
+            // Crudos
+            const totalCavaMP = datos['cava-mp'].reduce((sum, p) => sum + (p.canastas * p.factor), 0);
+            const totalTunel = datos.tunel.reduce((sum, p) => {
+                return sum + (p.tipoCalculo === 'carros' ? p.carros * p.factor : p.canastas * p.factor);
+            }, 0);
+            const totalCrudos = totalCavaMP + totalTunel;
+
+            document.getElementById('total-cava-mp').textContent = `${totalCavaMP.toFixed(0)} kg`;
+            document.getElementById('total-tunel').textContent = `${totalTunel.toFixed(0)} kg`;
+            document.getElementById('total-crudos').textContent = `${totalCrudos.toFixed(0)} kg`;
+
+            // Apanados
+            const totalApCavaMP = datos['ap-cava-mp'].reduce((sum, p) => sum + (p.canastas * p.factor), 0);
+            const totalApVentiladores = datos['ap-ventiladores'].reduce((sum, p) => sum + (p.canastas * p.factor), 0);
+            const totalApPasillo = datos['ap-pasillo'].reduce((sum, p) => sum + (p.canastas * p.factor), 0);
+            const totalApTerminado = datos['ap-terminado'].reduce((sum, p) => sum + (p.canastas * p.factor), 0);
+            const totalApanados = totalApCavaMP + totalApVentiladores + totalApPasillo + totalApTerminado;
+
+            document.getElementById('total-ap-cava-mp').textContent = `${totalApCavaMP.toFixed(0)} kg`;
+            document.getElementById('total-ap-ventiladores').textContent = `${totalApVentiladores.toFixed(0)} kg`;
+            document.getElementById('total-ap-pasillo').textContent = `${totalApPasillo.toFixed(0)} kg`;
+            document.getElementById('total-ap-terminado').textContent = `${totalApTerminado.toFixed(0)} kg`;
+            document.getElementById('total-apanados').textContent = `${totalApanados.toFixed(0)} kg`;
         }
 
-        // Guardar inventario
-        function guardarInventario() {
+        // ==================== GUARDAR ====================
+        function guardarInventario(modulo) {
             const registro = {
                 fecha: new Date().toISOString(),
-                datos: JSON.parse(JSON.stringify(datos)),
-                totales: {
+                modulo: modulo,
+                datos: JSON.parse(JSON.stringify(datos))
+            };
+
+            if (modulo === 'derivados') {
+                registro.totales = {
                     proceso: datos.proceso.reduce((sum, p) => sum + (p.canastas * p.factor), 0),
                     materia: datos.materia.reduce((sum, p) => sum + (p.canastas * p.factor), 0),
                     terminado: datos.terminado.reduce((sum, p) => sum + (p.canastas * p.factor), 0)
-                }
-            };
-
-            historial.unshift(registro);
-            if (historial.length > 30) historial.pop();
-            localStorage.setItem('inventario_historial', JSON.stringify(historial));
-            
-            renderizarHistorial();
-            mostrarToast('Inventario guardado');
-        }
-
-        // Renderizar historial
-        function renderizarHistorial() {
-            const lista = document.getElementById('historial-list');
-            
-            if (historial.length === 0) {
-                lista.innerHTML = '<p style="color: #888; text-align: center;">No hay registros guardados</p>';
-                return;
+                };
+            } else if (modulo === 'crudos') {
+                registro.totales = {
+                    cavaMP: datos['cava-mp'].reduce((sum, p) => sum + (p.canastas * p.factor), 0),
+                    tunel: datos.tunel.reduce((sum, p) => sum + (p.tipoCalculo === 'carros' ? p.carros * p.factor : p.canastas * p.factor), 0)
+                };
+            } else if (modulo === 'apanados') {
+                registro.totales = {
+                    cavaMP: datos['ap-cava-mp'].reduce((sum, p) => sum + (p.canastas * p.factor), 0),
+                    ventiladores: datos['ap-ventiladores'].reduce((sum, p) => sum + (p.canastas * p.factor), 0),
+                    pasillo: datos['ap-pasillo'].reduce((sum, p) => sum + (p.canastas * p.factor), 0),
+                    terminado: datos['ap-terminado'].reduce((sum, p) => sum + (p.canastas * p.factor), 0)
+                };
             }
 
-            lista.innerHTML = historial.slice(0, 10).map(reg => {
-                const fecha = new Date(reg.fecha);
-                const total = reg.totales.proceso + reg.totales.materia + reg.totales.terminado;
-                return `
-                    <div class="historial-item">
-                        <span class="historial-fecha">${fecha.toLocaleDateString('es-ES')} ${fecha.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}</span>
-                        <span class="historial-total">${total.toFixed(0)} kg total</span>
-                    </div>
-                `;
-            }).join('');
+            historial.unshift(registro);
+            if (historial.length > 50) historial.pop();
+            localStorage.setItem('inventario_historial_v2', JSON.stringify(historial));
+            
+            mostrarToast(`Inventario ${modulo} guardado`);
         }
 
-        // Exportar a Excel (CSV)
-        function exportarExcel() {
-            let csv = 'INVENTARIO 5:00PM DERIVADOS\n';
-            csv += `Fecha:,${new Date().toLocaleDateString('es-ES')}\n\n`;
+        // ==================== EXPORTAR EXCEL ====================
+        function exportarExcel(modulo) {
+            let csv = '';
+            const fecha = new Date().toLocaleDateString('es-ES');
 
-            csv += 'CAVA DE PRODUCTO EN PROCESO\n';
-            csv += 'Producto,Canastas,Kg Aproximados\n';
-            datos.proceso.forEach(p => {
-                csv += `${p.nombre},${p.canastas},${(p.canastas * p.factor).toFixed(0)}\n`;
-            });
+            if (modulo === 'derivados') {
+                csv = 'INVENTARIO 5:00PM DERIVADOS\n';
+                csv += `Fecha:,${fecha}\n\n`;
 
-            csv += '\nCAVA MATERIA PRIMA\n';
-            csv += 'Producto,Canastas,Kg Aproximados\n';
-            datos.materia.forEach(p => {
-                csv += `${p.nombre},${p.canastas},${(p.canastas * p.factor).toFixed(0)}\n`;
-            });
+                csv += 'CAVA DE PRODUCTO EN PROCESO\n';
+                csv += 'Producto,Canastas,Kg Aproximados\n';
+                datos.proceso.forEach(p => {
+                    csv += `${p.nombre},${p.canastas},${(p.canastas * p.factor).toFixed(0)}\n`;
+                });
 
-            csv += '\nCAVA DE PRODUCTO TERMINADO\n';
-            csv += 'Producto,Canastas,Kg Aproximados\n';
-            datos.terminado.forEach(p => {
-                csv += `${p.nombre},${p.canastas},${(p.canastas * p.factor).toFixed(0)}\n`;
-            });
+                csv += '\nCAVA MATERIA PRIMA\n';
+                csv += 'Producto,Canastas,Kg Aproximados\n';
+                datos.materia.forEach(p => {
+                    csv += `${p.nombre},${p.canastas},${(p.canastas * p.factor).toFixed(0)}\n`;
+                });
+
+                csv += '\nCAVA DE PRODUCTO TERMINADO\n';
+                csv += 'Producto,Canastas,Kg Aproximados\n';
+                datos.terminado.forEach(p => {
+                    csv += `${p.nombre},${p.canastas},${(p.canastas * p.factor).toFixed(0)}\n`;
+                });
+            } else if (modulo === 'crudos') {
+                csv = 'INVENTARIO 5:00PM CRUDOS\n';
+                csv += `Fecha:,${fecha}\n\n`;
+
+                csv += 'CAVA MATERIA PRIMA N° 2 Y 3\n';
+                csv += 'Producto,Canastas,Kg Aproximados\n';
+                datos['cava-mp'].forEach(p => {
+                    csv += `${p.nombre},${p.canastas},${(p.canastas * p.factor).toFixed(0)}\n`;
+                });
+
+                csv += '\nTÚNEL\n';
+                csv += 'Producto,Carros,Canastas,Kg Aproximados\n';
+                datos.tunel.forEach(p => {
+                    const kg = p.tipoCalculo === 'carros' ? p.carros * p.factor : p.canastas * p.factor;
+                    csv += `${p.nombre},${p.carros},${p.canastas},${kg.toFixed(0)}\n`;
+                });
+            } else if (modulo === 'apanados') {
+                csv = 'INVENTARIO 12:00PM APANADOS\n';
+                csv += `Fecha:,${fecha}\n\n`;
+
+                csv += 'CAVA MATERIA PRIMA\n';
+                csv += 'Producto,Canastas,Kg Aproximados\n';
+                datos['ap-cava-mp'].forEach(p => {
+                    csv += `${p.nombre},${p.canastas},${(p.canastas * p.factor).toFixed(0)}\n`;
+                });
+
+                csv += '\nVENTILADORES\n';
+                csv += 'Producto,Canastas,Kg Aproximados\n';
+                datos['ap-ventiladores'].forEach(p => {
+                    csv += `${p.nombre},${p.canastas},${(p.canastas * p.factor).toFixed(0)}\n`;
+                });
+
+                csv += '\nPASILLO\n';
+                csv += 'Producto,Canastas,Kg Aproximados\n';
+                datos['ap-pasillo'].forEach(p => {
+                    csv += `${p.nombre},${p.canastas},${(p.canastas * p.factor).toFixed(0)}\n`;
+                });
+
+                csv += '\nCAVA PRODUCTO TERMINADO\n';
+                csv += 'Producto,Canastas,Kg Aproximados\n';
+                datos['ap-terminado'].forEach(p => {
+                    csv += `${p.nombre},${p.canastas},${(p.canastas * p.factor).toFixed(0)}\n`;
+                });
+            }
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `inventario_${new Date().toISOString().split('T')[0]}.csv`;
+            link.download = `inventario_${modulo}_${new Date().toISOString().split('T')[0]}.csv`;
             link.click();
 
             mostrarToast('Archivo exportado');
         }
 
-        // Limpiar todo
-        function limpiarTodo() {
-            if (confirm('¿Limpiar todos los datos actuales?')) {
-                Object.keys(datos).forEach(seccion => {
-                    datos[seccion].forEach(p => p.canastas = 0);
+        // ==================== LIMPIAR ====================
+        function limpiarModulo(modulo) {
+            if (!confirm(`¿Limpiar todos los datos de ${modulo}?`)) return;
+
+            if (modulo === 'derivados') {
+                ['proceso', 'materia', 'terminado'].forEach(sec => {
+                    datos[sec].forEach(p => p.canastas = 0);
+                    renderizarLista(sec);
                 });
-                ['proceso', 'materia', 'terminado'].forEach(renderizarLista);
-                mostrarToast('Datos limpiados');
+            } else if (modulo === 'crudos') {
+                datos['cava-mp'].forEach(p => p.canastas = 0);
+                datos.tunel.forEach(p => { p.carros = 0; p.canastas = 0; });
+                renderizarLista('cava-mp');
+                renderizarLista('tunel');
+            } else if (modulo === 'apanados') {
+                ['ap-cava-mp', 'ap-ventiladores', 'ap-pasillo', 'ap-terminado'].forEach(sec => {
+                    datos[sec].forEach(p => p.canastas = 0);
+                    renderizarLista(sec);
+                });
             }
+            mostrarToast('Datos limpiados');
         }
 
-        // Mostrar toast
+        // ==================== TOAST ====================
         function mostrarToast(mensaje) {
             const toast = document.getElementById('toast');
             toast.textContent = '✓ ' + mensaje;
@@ -603,20 +1070,33 @@
             setTimeout(() => toast.classList.remove('show'), 2500);
         }
 
-        // Tabs
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        // ==================== NAVEGACIÓN MÓDULOS ====================
+        document.querySelectorAll('.modulo-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.modulo-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.modulo-content').forEach(c => c.classList.remove('active'));
                 
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab).classList.add('active');
+                btn.classList.add('active');
+                document.getElementById(`modulo-${btn.dataset.modulo}`).classList.add('active');
             });
         });
 
-        // Inicializar
-        ['proceso', 'materia', 'terminado'].forEach(renderizarLista);
-        renderizarHistorial();
+        // ==================== NAVEGACIÓN TABS ====================
+        document.querySelectorAll('.tabs').forEach(tabsContainer => {
+            tabsContainer.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const parent = tab.closest('.modulo-content');
+                    parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    parent.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab).classList.add('active');
+                });
+            });
+        });
+
+        // ==================== INICIALIZAR ====================
+        ['proceso', 'materia', 'terminado', 'cava-mp', 'tunel', 'ap-cava-mp', 'ap-ventiladores', 'ap-pasillo', 'ap-terminado'].forEach(renderizarLista);
     </script>
 </body>
 </html>
