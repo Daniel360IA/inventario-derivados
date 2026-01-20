@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Inventarios 5:00PM</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -42,12 +45,36 @@
             font-size: 0.95rem;
         }
 
+        .sync-status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+
+        .sync-online {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .sync-offline {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .sync-syncing {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
         /* Módulos principales */
         .modulos {
             display: flex;
             gap: 10px;
             margin-bottom: 25px;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         .modulo-btn {
@@ -109,7 +136,7 @@
             transition: all 0.3s;
             font-size: 0.9rem;
             flex: 1;
-            min-width: 140px;
+            min-width: 120px;
         }
 
         .tab:hover {
@@ -122,7 +149,6 @@
             font-weight: 600;
         }
 
-        /* Tabs naranjas para Crudos */
         .crudos-tabs .tab.active {
             background: linear-gradient(135deg, #f59e0b, #d97706);
         }
@@ -131,7 +157,6 @@
             background: rgba(245, 158, 11, 0.2);
         }
 
-        /* Tabs verdes para Apanados */
         .apanados-tabs .tab.active {
             background: linear-gradient(135deg, #10b981, #059669);
         }
@@ -266,10 +291,6 @@
             color: #fff;
         }
 
-        .add-product input[type="number"] {
-            width: 90px;
-        }
-
         .btn {
             padding: 10px 20px;
             border: none;
@@ -317,7 +338,7 @@
 
         .resumen-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 15px;
         }
 
@@ -479,21 +500,25 @@
             color: #fff;
         }
 
-        .modulo-badge {
-            font-size: 0.7rem;
-            padding: 3px 8px;
-            border-radius: 4px;
-            margin-left: 10px;
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
         }
 
-        .badge-derivados {
-            background: rgba(0, 212, 255, 0.2);
-            color: #00d4ff;
+        .loading-spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid #00d4ff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
         }
 
-        .badge-crudos {
-            background: rgba(245, 158, 11, 0.2);
-            color: #f59e0b;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 600px) {
@@ -518,6 +543,12 @@
                 padding: 12px 20px;
                 font-size: 0.9rem;
             }
+
+            .tab {
+                min-width: 100px;
+                padding: 10px 15px;
+                font-size: 0.8rem;
+            }
         }
     </style>
 </head>
@@ -526,6 +557,7 @@
         <header>
             <h1>📦 Sistema de Inventarios 5:00PM</h1>
             <p class="fecha-hora" id="fechaHora"></p>
+            <div class="sync-status sync-syncing" id="syncStatus">⏳ Conectando...</div>
         </header>
 
         <!-- Selector de Módulos -->
@@ -538,9 +570,9 @@
         <!-- ==================== MÓDULO DERIVADOS ==================== -->
         <div class="modulo-content active" id="modulo-derivados">
             <div class="tabs">
-                <button class="tab active" data-tab="proceso">🔄 Producto en Proceso</button>
+                <button class="tab active" data-tab="proceso">🔄 Proceso</button>
                 <button class="tab" data-tab="materia">📦 Materia Prima</button>
-                <button class="tab" data-tab="terminado">✅ Producto Terminado</button>
+                <button class="tab" data-tab="terminado">✅ Terminado</button>
                 <button class="tab" data-tab="resumen-derivados">📊 Resumen</button>
             </div>
 
@@ -602,7 +634,7 @@
                 <div class="card">
                     <h2>📜 Historial de Registros - Derivados</h2>
                     <div id="historial-derivados">
-                        <p style="color: #888; text-align: center;">No hay registros guardados</p>
+                        <div class="loading"><div class="loading-spinner"></div>Cargando historial...</div>
                     </div>
                 </div>
             </div>
@@ -617,9 +649,9 @@
         <!-- ==================== MÓDULO CRUDOS ==================== -->
         <div class="modulo-content" id="modulo-crudos">
             <div class="tabs crudos-tabs">
-                <button class="tab active" data-tab="cr-proceso">🔄 Producto en Proceso</button>
-                <button class="tab" data-tab="cr-cava-mp1">📦 Cava MP N°1</button>
-                <button class="tab" data-tab="cava-mp">📦 Cava MP N°2 Y 3</button>
+                <button class="tab active" data-tab="cr-proceso">🔄 Proceso</button>
+                <button class="tab" data-tab="cr-cava-mp1">📦 MP N°1</button>
+                <button class="tab" data-tab="cava-mp">📦 MP N°2y3</button>
                 <button class="tab" data-tab="tunel">🧊 Túnel</button>
                 <button class="tab" data-tab="resumen-crudos">📊 Resumen</button>
             </div>
@@ -697,7 +729,7 @@
                 <div class="card">
                     <h2>📜 Historial de Registros - Crudos</h2>
                     <div id="historial-crudos">
-                        <p style="color: #888; text-align: center;">No hay registros guardados</p>
+                        <div class="loading"><div class="loading-spinner"></div>Cargando historial...</div>
                     </div>
                 </div>
             </div>
@@ -712,10 +744,10 @@
         <!-- ==================== MÓDULO APANADOS ==================== -->
         <div class="modulo-content" id="modulo-apanados">
             <div class="tabs apanados-tabs">
-                <button class="tab active" data-tab="ap-cava-mp">📦 Cava Materia Prima</button>
+                <button class="tab active" data-tab="ap-cava-mp">📦 Cava MP</button>
                 <button class="tab" data-tab="ap-ventiladores">🌀 Ventiladores</button>
                 <button class="tab" data-tab="ap-pasillo">🚶 Pasillo</button>
-                <button class="tab" data-tab="ap-terminado">✅ Producto Terminado</button>
+                <button class="tab" data-tab="ap-terminado">✅ Terminado</button>
                 <button class="tab" data-tab="resumen-apanados">📊 Resumen</button>
             </div>
 
@@ -792,7 +824,7 @@
                 <div class="card">
                     <h2>📜 Historial de Registros - Apanados</h2>
                     <div id="historial-apanados">
-                        <p style="color: #888; text-align: center;">No hay registros guardados</p>
+                        <div class="loading"><div class="loading-spinner"></div>Cargando historial...</div>
                     </div>
                 </div>
             </div>
@@ -808,9 +840,23 @@
     <div class="toast" id="toast">✓ Guardado exitosamente</div>
 
     <script>
+        // ==================== FIREBASE CONFIG ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAm2Q9151uZwXwvtiQioblE4A99sclml3I",
+            authDomain: "inventario-produccion-531d0.firebaseapp.com",
+            databaseURL: "https://inventario-produccion-531d0-default-rtdb.firebaseio.com",
+            projectId: "inventario-produccion-531d0",
+            storageBucket: "inventario-produccion-531d0.firebasestorage.app",
+            messagingSenderId: "253761779110",
+            appId: "1:253761779110:web:0456d0854025436f520b67"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
         // ==================== DATOS ====================
         let datos = {
-            // Derivados
             proceso: [
                 { nombre: 'Punta y recorte', canastas: 0, kg: 0 },
                 { nombre: 'Tocineta premium', canastas: 0, kg: 0 },
@@ -828,7 +874,6 @@
                 { nombre: 'Bios', canastas: 0, kg: 0 },
                 { nombre: 'Reempaque', canastas: 0, kg: 0 }
             ],
-            // Crudos
             'cr-proceso': [
                 { nombre: 'Recorte Marinado', canastas: 0, kg: 0 },
                 { nombre: 'FUP 150', canastas: 0, kg: 0 },
@@ -856,7 +901,6 @@
                 { nombre: 'Alas BIOS', carros: 0, canastas: 0, kg: 0 },
                 { nombre: 'FN 100 COA', carros: 0, canastas: 0, kg: 0 }
             ],
-            // Apanados
             'ap-cava-mp': [
                 { nombre: 'Mezcla de hamburguesa', canastas: 0, kg: 0 },
                 { nombre: 'Filete friko', canastas: 0, kg: 0 },
@@ -880,7 +924,27 @@
             ]
         };
 
-        let historial = JSON.parse(localStorage.getItem('inventario_historial_v3') || '[]');
+        let historial = { derivados: [], crudos: [], apanados: [] };
+
+        // ==================== SYNC STATUS ====================
+        function updateSyncStatus(status) {
+            const el = document.getElementById('syncStatus');
+            if (status === 'online') {
+                el.className = 'sync-status sync-online';
+                el.innerHTML = '🟢 Conectado';
+            } else if (status === 'offline') {
+                el.className = 'sync-status sync-offline';
+                el.innerHTML = '🔴 Sin conexión';
+            } else {
+                el.className = 'sync-status sync-syncing';
+                el.innerHTML = '⏳ Sincronizando...';
+            }
+        }
+
+        // Detectar conexión
+        database.ref('.info/connected').on('value', (snap) => {
+            updateSyncStatus(snap.val() ? 'online' : 'offline');
+        });
 
         // ==================== FECHA/HORA ====================
         function actualizarFecha() {
@@ -898,54 +962,102 @@
         actualizarFecha();
         setInterval(actualizarFecha, 60000);
 
+        // ==================== CARGAR DATOS DE FIREBASE ====================
+        function cargarDatosFirebase() {
+            // Cargar productos - usar 'once' primero para cargar, luego 'on' para sincronizar
+            database.ref('productos').once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    const datosFirebase = snapshot.val();
+                    Object.keys(datos).forEach(seccion => {
+                        if (datosFirebase[seccion]) {
+                            datos[seccion] = datosFirebase[seccion];
+                        }
+                    });
+                } else {
+                    // Si no hay datos en Firebase, guardar los datos iniciales
+                    database.ref('productos').set(datos);
+                }
+                // Renderizar todas las listas
+                Object.keys(datos).forEach(seccion => {
+                    renderizarLista(seccion);
+                });
+                
+                // Ahora suscribirse a cambios en tiempo real
+                database.ref('productos').on('value', (snap) => {
+                    if (snap.exists()) {
+                        const datosActualizados = snap.val();
+                        Object.keys(datos).forEach(seccion => {
+                            if (datosActualizados[seccion]) {
+                                datos[seccion] = datosActualizados[seccion];
+                            }
+                        });
+                        Object.keys(datos).forEach(seccion => {
+                            renderizarLista(seccion);
+                        });
+                    }
+                });
+            });
+
+            // Cargar historial
+            ['derivados', 'crudos', 'apanados'].forEach(modulo => {
+                database.ref(`historial/${modulo}`).orderByChild('fecha').limitToLast(20).on('value', (snapshot) => {
+                    historial[modulo] = [];
+                    if (snapshot.exists()) {
+                        snapshot.forEach(child => {
+                            historial[modulo].unshift({ id: child.key, ...child.val() });
+                        });
+                    }
+                    renderizarHistorial(modulo);
+                });
+            });
+        }
+
         // ==================== RENDERIZAR LISTAS ====================
         function renderizarLista(seccion) {
             const lista = document.getElementById(`${seccion}-list`);
-            if (!lista) return;
+            if (!lista || !datos[seccion]) return;
             lista.innerHTML = '';
 
             datos[seccion].forEach((producto, index) => {
                 const row = document.createElement('div');
                 
-                // Túnel tiene carros y canastas
                 if (seccion === 'tunel') {
                     row.className = 'form-row';
                     row.innerHTML = `
                         <span class="producto-nombre">${producto.nombre}</span>
                         <div class="input-group">
-                            <input type="number" value="${producto.carros}" min="0" 
-                                   onchange="actualizarTunel(${index}, 'carros', this.value)"
+                            <input type="number" value="${producto.carros || 0}" min="0" 
+                                   onchange="actualizarValor('${seccion}', ${index}, 'carros', this.value)"
                                    placeholder="0">
                             <span class="input-label">Carros</span>
                         </div>
                         <div class="input-group">
-                            <input type="number" value="${producto.canastas}" min="0" 
-                                   onchange="actualizarTunel(${index}, 'canastas', this.value)"
+                            <input type="number" value="${producto.canastas || 0}" min="0" 
+                                   onchange="actualizarValor('${seccion}', ${index}, 'canastas', this.value)"
                                    placeholder="0">
                             <span class="input-label">Canastas</span>
                         </div>
                         <div class="input-group">
                             <input type="number" value="${producto.kg || 0}" min="0" 
-                                   onchange="actualizarKg('${seccion}', ${index}, this.value)"
+                                   onchange="actualizarValor('${seccion}', ${index}, 'kg', this.value)"
                                    placeholder="0" class="kg-input">
                             <span class="input-label">Kg</span>
                         </div>
                         <button class="btn btn-delete" onclick="eliminarProducto('${seccion}', ${index})">✕</button>
                     `;
                 } else {
-                    // Otras secciones tienen canastas y kg manual
                     row.className = 'form-row no-carros';
                     row.innerHTML = `
                         <span class="producto-nombre">${producto.nombre}</span>
                         <div class="input-group">
-                            <input type="number" value="${producto.canastas}" min="0" 
-                                   onchange="actualizarCanastas('${seccion}', ${index}, this.value)"
+                            <input type="number" value="${producto.canastas || 0}" min="0" 
+                                   onchange="actualizarValor('${seccion}', ${index}, 'canastas', this.value)"
                                    placeholder="0">
                             <span class="input-label">Canastas</span>
                         </div>
                         <div class="input-group">
                             <input type="number" value="${producto.kg || 0}" min="0" 
-                                   onchange="actualizarKg('${seccion}', ${index}, this.value)"
+                                   onchange="actualizarValor('${seccion}', ${index}, 'kg', this.value)"
                                    placeholder="0" class="kg-input">
                             <span class="input-label">Kg</span>
                         </div>
@@ -959,19 +1071,11 @@
         }
 
         // ==================== ACTUALIZAR VALORES ====================
-        function actualizarCanastas(seccion, index, valor) {
-            datos[seccion][index].canastas = parseFloat(valor) || 0;
-            renderizarLista(seccion);
-        }
-
-        function actualizarKg(seccion, index, valor) {
-            datos[seccion][index].kg = parseFloat(valor) || 0;
+        function actualizarValor(seccion, index, campo, valor) {
+            datos[seccion][index][campo] = parseFloat(valor) || 0;
+            // Guardar en Firebase
+            database.ref(`productos/${seccion}`).set(datos[seccion]);
             actualizarResumen();
-        }
-
-        function actualizarTunel(index, campo, valor) {
-            datos.tunel[index][campo] = parseFloat(valor) || 0;
-            renderizarLista('tunel');
         }
 
         // ==================== AGREGAR/ELIMINAR PRODUCTOS ====================
@@ -985,6 +1089,9 @@
                     datos[seccion].push({ nombre, canastas: 0, kg: 0 });
                 }
                 document.getElementById(`${seccion}-nuevo-nombre`).value = '';
+                
+                // Guardar en Firebase
+                database.ref(`productos/${seccion}`).set(datos[seccion]);
                 renderizarLista(seccion);
                 mostrarToast('Producto agregado');
             }
@@ -993,6 +1100,8 @@
         function eliminarProducto(seccion, index) {
             if (confirm('¿Eliminar este producto?')) {
                 datos[seccion].splice(index, 1);
+                // Guardar en Firebase
+                database.ref(`productos/${seccion}`).set(datos[seccion]);
                 renderizarLista(seccion);
                 mostrarToast('Producto eliminado');
             }
@@ -1001,9 +1110,9 @@
         // ==================== RESUMEN ====================
         function actualizarResumen() {
             // Derivados
-            const totalProceso = datos.proceso.reduce((sum, p) => sum + (p.kg || 0), 0);
-            const totalMateria = datos.materia.reduce((sum, p) => sum + (p.kg || 0), 0);
-            const totalTerminado = datos.terminado.reduce((sum, p) => sum + (p.kg || 0), 0);
+            const totalProceso = (datos.proceso || []).reduce((sum, p) => sum + (p.kg || 0), 0);
+            const totalMateria = (datos.materia || []).reduce((sum, p) => sum + (p.kg || 0), 0);
+            const totalTerminado = (datos.terminado || []).reduce((sum, p) => sum + (p.kg || 0), 0);
             const totalDerivados = totalProceso + totalMateria + totalTerminado;
 
             document.getElementById('total-proceso').textContent = `${totalProceso.toFixed(0)} kg`;
@@ -1012,10 +1121,10 @@
             document.getElementById('total-derivados').textContent = `${totalDerivados.toFixed(0)} kg`;
 
             // Crudos
-            const totalCrProceso = datos['cr-proceso'].reduce((sum, p) => sum + (p.kg || 0), 0);
-            const totalCrCavaMP1 = datos['cr-cava-mp1'].reduce((sum, p) => sum + (p.kg || 0), 0);
-            const totalCavaMP = datos['cava-mp'].reduce((sum, p) => sum + (p.kg || 0), 0);
-            const totalTunel = datos.tunel.reduce((sum, p) => sum + (p.kg || 0), 0);
+            const totalCrProceso = (datos['cr-proceso'] || []).reduce((sum, p) => sum + (p.kg || 0), 0);
+            const totalCrCavaMP1 = (datos['cr-cava-mp1'] || []).reduce((sum, p) => sum + (p.kg || 0), 0);
+            const totalCavaMP = (datos['cava-mp'] || []).reduce((sum, p) => sum + (p.kg || 0), 0);
+            const totalTunel = (datos.tunel || []).reduce((sum, p) => sum + (p.kg || 0), 0);
             const totalCrudos = totalCrProceso + totalCrCavaMP1 + totalCavaMP + totalTunel;
 
             document.getElementById('total-cr-proceso').textContent = `${totalCrProceso.toFixed(0)} kg`;
@@ -1025,10 +1134,10 @@
             document.getElementById('total-crudos').textContent = `${totalCrudos.toFixed(0)} kg`;
 
             // Apanados
-            const totalApCavaMP = datos['ap-cava-mp'].reduce((sum, p) => sum + (p.kg || 0), 0);
-            const totalApVentiladores = datos['ap-ventiladores'].reduce((sum, p) => sum + (p.kg || 0), 0);
-            const totalApPasillo = datos['ap-pasillo'].reduce((sum, p) => sum + (p.kg || 0), 0);
-            const totalApTerminado = datos['ap-terminado'].reduce((sum, p) => sum + (p.kg || 0), 0);
+            const totalApCavaMP = (datos['ap-cava-mp'] || []).reduce((sum, p) => sum + (p.kg || 0), 0);
+            const totalApVentiladores = (datos['ap-ventiladores'] || []).reduce((sum, p) => sum + (p.kg || 0), 0);
+            const totalApPasillo = (datos['ap-pasillo'] || []).reduce((sum, p) => sum + (p.kg || 0), 0);
+            const totalApTerminado = (datos['ap-terminado'] || []).reduce((sum, p) => sum + (p.kg || 0), 0);
             const totalApanados = totalApCavaMP + totalApVentiladores + totalApPasillo + totalApTerminado;
 
             document.getElementById('total-ap-cava-mp').textContent = `${totalApCavaMP.toFixed(0)} kg`;
@@ -1038,16 +1147,17 @@
             document.getElementById('total-apanados').textContent = `${totalApanados.toFixed(0)} kg`;
         }
 
-        // ==================== GUARDAR ====================
+        // ==================== GUARDAR EN FIREBASE ====================
         function guardarInventario(modulo) {
             const ahora = new Date();
             const registro = {
-                id: Date.now(),
                 fecha: ahora.toISOString(),
                 fechaStr: ahora.toLocaleDateString('es-ES'),
                 horaStr: ahora.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'}),
                 modulo: modulo,
-                datos: {}
+                datos: {},
+                totales: {},
+                totalGeneral: 0
             };
 
             if (modulo === 'derivados') {
@@ -1092,12 +1202,14 @@
                 registro.totalGeneral = registro.totales.cavaMP + registro.totales.ventiladores + registro.totales.pasillo + registro.totales.terminado;
             }
 
-            historial.unshift(registro);
-            if (historial.length > 100) historial.pop();
-            localStorage.setItem('inventario_historial_v3', JSON.stringify(historial));
-            
-            renderizarHistorial(modulo);
-            mostrarToast(`Inventario ${modulo} guardado - ${registro.horaStr}`);
+            // Guardar en Firebase
+            database.ref(`historial/${modulo}`).push(registro)
+                .then(() => {
+                    mostrarToast(`Inventario ${modulo} guardado - ${registro.horaStr}`);
+                })
+                .catch(error => {
+                    mostrarToast('Error al guardar: ' + error.message);
+                });
         }
 
         // ==================== RENDERIZAR HISTORIAL ====================
@@ -1105,30 +1217,30 @@
             const contenedor = document.getElementById(`historial-${modulo}`);
             if (!contenedor) return;
 
-            const registrosModulo = historial.filter(r => r.modulo === modulo);
+            const registrosModulo = historial[modulo] || [];
 
             if (registrosModulo.length === 0) {
                 contenedor.innerHTML = '<p style="color: #888; text-align: center;">No hay registros guardados</p>';
                 return;
             }
 
-            contenedor.innerHTML = registrosModulo.slice(0, 20).map(reg => {
+            contenedor.innerHTML = registrosModulo.map(reg => {
                 let detalleHTML = '';
-                if (modulo === 'derivados') {
-                    detalleHTML = `Proceso: ${reg.totales.proceso} kg | Materia Prima: ${reg.totales.materia} kg | Terminado: ${reg.totales.terminado} kg`;
-                } else if (modulo === 'crudos') {
-                    detalleHTML = `Proceso: ${reg.totales.proceso} kg | MP N°1: ${reg.totales.cavaMP1} kg | MP N°2y3: ${reg.totales.cavaMP} kg | Túnel: ${reg.totales.tunel} kg`;
-                } else if (modulo === 'apanados') {
-                    detalleHTML = `Cava MP: ${reg.totales.cavaMP} kg | Ventiladores: ${reg.totales.ventiladores} kg | Pasillo: ${reg.totales.pasillo} kg | Terminado: ${reg.totales.terminado} kg`;
+                if (modulo === 'derivados' && reg.totales) {
+                    detalleHTML = `Proceso: ${reg.totales.proceso || 0} kg | Materia Prima: ${reg.totales.materia || 0} kg | Terminado: ${reg.totales.terminado || 0} kg`;
+                } else if (modulo === 'crudos' && reg.totales) {
+                    detalleHTML = `Proceso: ${reg.totales.proceso || 0} kg | MP N°1: ${reg.totales.cavaMP1 || 0} kg | MP N°2y3: ${reg.totales.cavaMP || 0} kg | Túnel: ${reg.totales.tunel || 0} kg`;
+                } else if (modulo === 'apanados' && reg.totales) {
+                    detalleHTML = `Cava MP: ${reg.totales.cavaMP || 0} kg | Ventiladores: ${reg.totales.ventiladores || 0} kg | Pasillo: ${reg.totales.pasillo || 0} kg | Terminado: ${reg.totales.terminado || 0} kg`;
                 }
 
                 return `
                     <div class="historial-item">
                         <div>
-                            <span class="historial-fecha">${reg.fechaStr}</span>
-                            <span class="historial-hora">⏰ ${reg.horaStr}</span>
+                            <span class="historial-fecha">${reg.fechaStr || ''}</span>
+                            <span class="historial-hora">⏰ ${reg.horaStr || ''}</span>
                         </div>
-                        <span class="historial-total">${reg.totalGeneral.toFixed(0)} kg total</span>
+                        <span class="historial-total">${(reg.totalGeneral || 0).toFixed(0)} kg total</span>
                         <div class="historial-actions">
                             <button class="btn btn-ver" onclick="cargarRegistro('${reg.id}', '${modulo}')">📂 Cargar</button>
                             <button class="btn btn-eliminar-hist" onclick="eliminarRegistro('${reg.id}', '${modulo}')">🗑️</button>
@@ -1141,28 +1253,37 @@
 
         // ==================== CARGAR REGISTRO ====================
         function cargarRegistro(id, modulo) {
-            const registro = historial.find(r => r.id == id);
-            if (!registro) return;
+            const registro = historial[modulo].find(r => r.id === id);
+            if (!registro || !registro.datos) return;
 
             if (!confirm(`¿Cargar el registro del ${registro.fechaStr} a las ${registro.horaStr}? Esto reemplazará los datos actuales.`)) return;
 
             if (modulo === 'derivados') {
-                datos.proceso = JSON.parse(JSON.stringify(registro.datos.proceso));
-                datos.materia = JSON.parse(JSON.stringify(registro.datos.materia));
-                datos.terminado = JSON.parse(JSON.stringify(registro.datos.terminado));
-                ['proceso', 'materia', 'terminado'].forEach(renderizarLista);
+                if (registro.datos.proceso) datos.proceso = JSON.parse(JSON.stringify(registro.datos.proceso));
+                if (registro.datos.materia) datos.materia = JSON.parse(JSON.stringify(registro.datos.materia));
+                if (registro.datos.terminado) datos.terminado = JSON.parse(JSON.stringify(registro.datos.terminado));
+                ['proceso', 'materia', 'terminado'].forEach(sec => {
+                    database.ref(`productos/${sec}`).set(datos[sec]);
+                    renderizarLista(sec);
+                });
             } else if (modulo === 'crudos') {
-                datos['cr-proceso'] = JSON.parse(JSON.stringify(registro.datos['cr-proceso']));
-                datos['cr-cava-mp1'] = JSON.parse(JSON.stringify(registro.datos['cr-cava-mp1']));
-                datos['cava-mp'] = JSON.parse(JSON.stringify(registro.datos['cava-mp']));
-                datos.tunel = JSON.parse(JSON.stringify(registro.datos['tunel']));
-                ['cr-proceso', 'cr-cava-mp1', 'cava-mp', 'tunel'].forEach(renderizarLista);
+                if (registro.datos['cr-proceso']) datos['cr-proceso'] = JSON.parse(JSON.stringify(registro.datos['cr-proceso']));
+                if (registro.datos['cr-cava-mp1']) datos['cr-cava-mp1'] = JSON.parse(JSON.stringify(registro.datos['cr-cava-mp1']));
+                if (registro.datos['cava-mp']) datos['cava-mp'] = JSON.parse(JSON.stringify(registro.datos['cava-mp']));
+                if (registro.datos['tunel']) datos.tunel = JSON.parse(JSON.stringify(registro.datos['tunel']));
+                ['cr-proceso', 'cr-cava-mp1', 'cava-mp', 'tunel'].forEach(sec => {
+                    database.ref(`productos/${sec}`).set(datos[sec]);
+                    renderizarLista(sec);
+                });
             } else if (modulo === 'apanados') {
-                datos['ap-cava-mp'] = JSON.parse(JSON.stringify(registro.datos['ap-cava-mp']));
-                datos['ap-ventiladores'] = JSON.parse(JSON.stringify(registro.datos['ap-ventiladores']));
-                datos['ap-pasillo'] = JSON.parse(JSON.stringify(registro.datos['ap-pasillo']));
-                datos['ap-terminado'] = JSON.parse(JSON.stringify(registro.datos['ap-terminado']));
-                ['ap-cava-mp', 'ap-ventiladores', 'ap-pasillo', 'ap-terminado'].forEach(renderizarLista);
+                if (registro.datos['ap-cava-mp']) datos['ap-cava-mp'] = JSON.parse(JSON.stringify(registro.datos['ap-cava-mp']));
+                if (registro.datos['ap-ventiladores']) datos['ap-ventiladores'] = JSON.parse(JSON.stringify(registro.datos['ap-ventiladores']));
+                if (registro.datos['ap-pasillo']) datos['ap-pasillo'] = JSON.parse(JSON.stringify(registro.datos['ap-pasillo']));
+                if (registro.datos['ap-terminado']) datos['ap-terminado'] = JSON.parse(JSON.stringify(registro.datos['ap-terminado']));
+                ['ap-cava-mp', 'ap-ventiladores', 'ap-pasillo', 'ap-terminado'].forEach(sec => {
+                    database.ref(`productos/${sec}`).set(datos[sec]);
+                    renderizarLista(sec);
+                });
             }
 
             mostrarToast(`Registro cargado: ${registro.horaStr}`);
@@ -1172,20 +1293,24 @@
         function eliminarRegistro(id, modulo) {
             if (!confirm('¿Eliminar este registro del historial?')) return;
 
-            historial = historial.filter(r => r.id != id);
-            localStorage.setItem('inventario_historial_v3', JSON.stringify(historial));
-            renderizarHistorial(modulo);
-            mostrarToast('Registro eliminado');
+            database.ref(`historial/${modulo}/${id}`).remove()
+                .then(() => {
+                    mostrarToast('Registro eliminado');
+                })
+                .catch(error => {
+                    mostrarToast('Error al eliminar: ' + error.message);
+                });
         }
 
         // ==================== EXPORTAR EXCEL ====================
         function exportarExcel(modulo) {
             let csv = '';
             const fecha = new Date().toLocaleDateString('es-ES');
+            const hora = new Date().toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
 
             if (modulo === 'derivados') {
                 csv = 'INVENTARIO 5:00PM DERIVADOS\n';
-                csv += `Fecha:,${fecha}\n\n`;
+                csv += `Fecha:,${fecha},Hora:,${hora}\n\n`;
 
                 csv += 'CAVA DE PRODUCTO EN PROCESO\n';
                 csv += 'Producto,Canastas,Kg Aproximados\n';
@@ -1206,7 +1331,7 @@
                 });
             } else if (modulo === 'crudos') {
                 csv = 'INVENTARIO 5:00PM CRUDOS\n';
-                csv += `Fecha:,${fecha}\n\n`;
+                csv += `Fecha:,${fecha},Hora:,${hora}\n\n`;
 
                 csv += 'CAVA DE PRODUCTO EN PROCESO\n';
                 csv += 'Producto,Canastas,Kg Aproximados\n';
@@ -1233,7 +1358,7 @@
                 });
             } else if (modulo === 'apanados') {
                 csv = 'INVENTARIO 12:00PM APANADOS\n';
-                csv += `Fecha:,${fecha}\n\n`;
+                csv += `Fecha:,${fecha},Hora:,${hora}\n\n`;
 
                 csv += 'CAVA MATERIA PRIMA\n';
                 csv += 'Producto,Canastas,Kg Aproximados\n';
@@ -1263,7 +1388,7 @@
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `inventario_${modulo}_${new Date().toISOString().split('T')[0]}.csv`;
+            link.download = `inventario_${modulo}_${new Date().toISOString().split('T')[0]}_${hora.replace(':', '-')}.csv`;
             link.click();
 
             mostrarToast('Archivo exportado');
@@ -1276,6 +1401,7 @@
             if (modulo === 'derivados') {
                 ['proceso', 'materia', 'terminado'].forEach(sec => {
                     datos[sec].forEach(p => { p.canastas = 0; p.kg = 0; });
+                    database.ref(`productos/${sec}`).set(datos[sec]);
                     renderizarLista(sec);
                 });
             } else if (modulo === 'crudos') {
@@ -1283,13 +1409,14 @@
                 datos['cr-cava-mp1'].forEach(p => { p.canastas = 0; p.kg = 0; });
                 datos['cava-mp'].forEach(p => { p.canastas = 0; p.kg = 0; });
                 datos.tunel.forEach(p => { p.carros = 0; p.canastas = 0; p.kg = 0; });
-                renderizarLista('cr-proceso');
-                renderizarLista('cr-cava-mp1');
-                renderizarLista('cava-mp');
-                renderizarLista('tunel');
+                ['cr-proceso', 'cr-cava-mp1', 'cava-mp', 'tunel'].forEach(sec => {
+                    database.ref(`productos/${sec}`).set(datos[sec]);
+                    renderizarLista(sec);
+                });
             } else if (modulo === 'apanados') {
                 ['ap-cava-mp', 'ap-ventiladores', 'ap-pasillo', 'ap-terminado'].forEach(sec => {
                     datos[sec].forEach(p => { p.canastas = 0; p.kg = 0; });
+                    database.ref(`productos/${sec}`).set(datos[sec]);
                     renderizarLista(sec);
                 });
             }
@@ -1330,10 +1457,7 @@
         });
 
         // ==================== INICIALIZAR ====================
-        ['proceso', 'materia', 'terminado', 'cr-proceso', 'cr-cava-mp1', 'cava-mp', 'tunel', 'ap-cava-mp', 'ap-ventiladores', 'ap-pasillo', 'ap-terminado'].forEach(renderizarLista);
-        
-        // Renderizar historiales
-        ['derivados', 'crudos', 'apanados'].forEach(renderizarHistorial);
+        cargarDatosFirebase();
     </script>
 </body>
 </html>
