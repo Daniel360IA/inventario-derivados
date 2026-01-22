@@ -747,6 +747,7 @@
                 <button class="tab active" data-tab="ap-cava-mp">📦 Cava MP</button>
                 <button class="tab" data-tab="ap-ventiladores">🌀 Ventiladores</button>
                 <button class="tab" data-tab="ap-pasillo">🚶 Pasillo</button>
+                <button class="tab" data-tab="ap-jamon-tunel">🧊 Jamón y Túnel</button>
                 <button class="tab" data-tab="ap-terminado">✅ Terminado</button>
                 <button class="tab" data-tab="resumen-apanados">📊 Resumen</button>
             </div>
@@ -784,6 +785,17 @@
                 </div>
             </div>
 
+            <div class="section" id="ap-jamon-tunel">
+                <div class="card apanados-card">
+                    <h2>Cava Jamón y Túnel</h2>
+                    <div id="ap-jamon-tunel-list"></div>
+                    <div class="add-product">
+                        <input type="text" id="ap-jamon-tunel-nuevo-nombre" placeholder="Nuevo producto...">
+                        <button class="btn btn-add" onclick="agregarProducto('ap-jamon-tunel')">+ Agregar</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="section" id="ap-terminado">
                 <div class="card apanados-card">
                     <h2>Cava Producto Terminado - Apanados</h2>
@@ -810,6 +822,10 @@
                         <div class="resumen-item">
                             <div class="label">Pasillo</div>
                             <div class="value" id="total-ap-pasillo">0 kg</div>
+                        </div>
+                        <div class="resumen-item">
+                            <div class="label">Jamón y Túnel</div>
+                            <div class="value" id="total-ap-jamon-tunel">0 kg</div>
                         </div>
                         <div class="resumen-item">
                             <div class="label">Producto Terminado</div>
@@ -912,6 +928,11 @@
             'ap-pasillo': [
                 { nombre: 'Pechuga', canastas: 0, kg: 0 },
                 { nombre: 'Lomos bucanero', canastas: 0, kg: 0 }
+            ],
+            'ap-jamon-tunel': [
+                { nombre: 'Filete Friko', canastas: 0, kg: 0 },
+                { nombre: 'Trozos Friko', canastas: 0, kg: 0 },
+                { nombre: 'Palos', canastas: 0, kg: 0 }
             ],
             'ap-terminado': [
                 { nombre: 'Sarku', canastas: 0, kg: 0 },
@@ -1137,12 +1158,14 @@
             const totalApCavaMP = (datos['ap-cava-mp'] || []).reduce((sum, p) => sum + (p.kg || 0), 0);
             const totalApVentiladores = (datos['ap-ventiladores'] || []).reduce((sum, p) => sum + (p.kg || 0), 0);
             const totalApPasillo = (datos['ap-pasillo'] || []).reduce((sum, p) => sum + (p.kg || 0), 0);
+            const totalApJamonTunel = (datos['ap-jamon-tunel'] || []).reduce((sum, p) => sum + (p.kg || 0), 0);
             const totalApTerminado = (datos['ap-terminado'] || []).reduce((sum, p) => sum + (p.kg || 0), 0);
-            const totalApanados = totalApCavaMP + totalApVentiladores + totalApPasillo + totalApTerminado;
+            const totalApanados = totalApCavaMP + totalApVentiladores + totalApPasillo + totalApJamonTunel + totalApTerminado;
 
             document.getElementById('total-ap-cava-mp').textContent = `${totalApCavaMP.toFixed(0)} kg`;
             document.getElementById('total-ap-ventiladores').textContent = `${totalApVentiladores.toFixed(0)} kg`;
             document.getElementById('total-ap-pasillo').textContent = `${totalApPasillo.toFixed(0)} kg`;
+            document.getElementById('total-ap-jamon-tunel').textContent = `${totalApJamonTunel.toFixed(0)} kg`;
             document.getElementById('total-ap-terminado').textContent = `${totalApTerminado.toFixed(0)} kg`;
             document.getElementById('total-apanados').textContent = `${totalApanados.toFixed(0)} kg`;
         }
@@ -1191,15 +1214,17 @@
                     'ap-cava-mp': JSON.parse(JSON.stringify(datos['ap-cava-mp'])),
                     'ap-ventiladores': JSON.parse(JSON.stringify(datos['ap-ventiladores'])),
                     'ap-pasillo': JSON.parse(JSON.stringify(datos['ap-pasillo'])),
+                    'ap-jamon-tunel': JSON.parse(JSON.stringify(datos['ap-jamon-tunel'])),
                     'ap-terminado': JSON.parse(JSON.stringify(datos['ap-terminado']))
                 };
                 registro.totales = {
                     cavaMP: datos['ap-cava-mp'].reduce((sum, p) => sum + (p.kg || 0), 0),
                     ventiladores: datos['ap-ventiladores'].reduce((sum, p) => sum + (p.kg || 0), 0),
                     pasillo: datos['ap-pasillo'].reduce((sum, p) => sum + (p.kg || 0), 0),
+                    jamonTunel: datos['ap-jamon-tunel'].reduce((sum, p) => sum + (p.kg || 0), 0),
                     terminado: datos['ap-terminado'].reduce((sum, p) => sum + (p.kg || 0), 0)
                 };
-                registro.totalGeneral = registro.totales.cavaMP + registro.totales.ventiladores + registro.totales.pasillo + registro.totales.terminado;
+                registro.totalGeneral = registro.totales.cavaMP + registro.totales.ventiladores + registro.totales.pasillo + registro.totales.jamonTunel + registro.totales.terminado;
             }
 
             // Guardar en Firebase
@@ -1231,7 +1256,7 @@
                 } else if (modulo === 'crudos' && reg.totales) {
                     detalleHTML = `Proceso: ${reg.totales.proceso || 0} kg | MP N°1: ${reg.totales.cavaMP1 || 0} kg | MP N°2y3: ${reg.totales.cavaMP || 0} kg | Túnel: ${reg.totales.tunel || 0} kg`;
                 } else if (modulo === 'apanados' && reg.totales) {
-                    detalleHTML = `Cava MP: ${reg.totales.cavaMP || 0} kg | Ventiladores: ${reg.totales.ventiladores || 0} kg | Pasillo: ${reg.totales.pasillo || 0} kg | Terminado: ${reg.totales.terminado || 0} kg`;
+                    detalleHTML = `Cava MP: ${reg.totales.cavaMP || 0} kg | Ventiladores: ${reg.totales.ventiladores || 0} kg | Pasillo: ${reg.totales.pasillo || 0} kg | Jamón/Túnel: ${reg.totales.jamonTunel || 0} kg | Terminado: ${reg.totales.terminado || 0} kg`;
                 }
 
                 return `
@@ -1279,8 +1304,9 @@
                 if (registro.datos['ap-cava-mp']) datos['ap-cava-mp'] = JSON.parse(JSON.stringify(registro.datos['ap-cava-mp']));
                 if (registro.datos['ap-ventiladores']) datos['ap-ventiladores'] = JSON.parse(JSON.stringify(registro.datos['ap-ventiladores']));
                 if (registro.datos['ap-pasillo']) datos['ap-pasillo'] = JSON.parse(JSON.stringify(registro.datos['ap-pasillo']));
+                if (registro.datos['ap-jamon-tunel']) datos['ap-jamon-tunel'] = JSON.parse(JSON.stringify(registro.datos['ap-jamon-tunel']));
                 if (registro.datos['ap-terminado']) datos['ap-terminado'] = JSON.parse(JSON.stringify(registro.datos['ap-terminado']));
-                ['ap-cava-mp', 'ap-ventiladores', 'ap-pasillo', 'ap-terminado'].forEach(sec => {
+                ['ap-cava-mp', 'ap-ventiladores', 'ap-pasillo', 'ap-jamon-tunel', 'ap-terminado'].forEach(sec => {
                     database.ref(`productos/${sec}`).set(datos[sec]);
                     renderizarLista(sec);
                 });
@@ -1378,6 +1404,12 @@
                     csv += `${p.nombre},${p.canastas},${p.kg || 0}\n`;
                 });
 
+                csv += '\nCAVA JAMÓN Y TÚNEL\n';
+                csv += 'Producto,Canastas,Kg Aproximados\n';
+                datos['ap-jamon-tunel'].forEach(p => {
+                    csv += `${p.nombre},${p.canastas},${p.kg || 0}\n`;
+                });
+
                 csv += '\nCAVA PRODUCTO TERMINADO\n';
                 csv += 'Producto,Canastas,Kg Aproximados\n';
                 datos['ap-terminado'].forEach(p => {
@@ -1414,7 +1446,7 @@
                     renderizarLista(sec);
                 });
             } else if (modulo === 'apanados') {
-                ['ap-cava-mp', 'ap-ventiladores', 'ap-pasillo', 'ap-terminado'].forEach(sec => {
+                ['ap-cava-mp', 'ap-ventiladores', 'ap-pasillo', 'ap-jamon-tunel', 'ap-terminado'].forEach(sec => {
                     datos[sec].forEach(p => { p.canastas = 0; p.kg = 0; });
                     database.ref(`productos/${sec}`).set(datos[sec]);
                     renderizarLista(sec);
